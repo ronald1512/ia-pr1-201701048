@@ -191,8 +191,11 @@ const minmax = (turno, matriz) => {
 
     // console.log(candidatos);
 
-    // candidatos.sort((a, b) => a.cantidad - b.cantidad);
-    candidatos.sort((a, b) => a.acumulado - b.acumulado);
+    if(turno==tipoCelda.negra){
+        candidatos.sort((a, b) => a.acumulado - b.acumulado);
+    }else{
+        candidatos.sort((a, b) => a.cantidad - b.cantidad);
+    }
     // console.log(candidatos[candidatos.length-1]);
     return candidatos[candidatos.length - 1];
 }
