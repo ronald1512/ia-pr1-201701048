@@ -1,15 +1,25 @@
 const express = require('express')
 const app = express()
+let punteos=[120,-20,20,5,5,20,-20,120];  //fila 0
+
+punteos=[...punteos,-20,-40,-5,-5,-5,-5,-40,-20];
+punteos=[...punteos,20,-5,15,3,3,15,-5,20];
+punteos=[...punteos,5,-5,3,3,3,3,-5,5];
+punteos=[...punteos,5,-5,3,3,3,3,-5,5];
+punteos=[...punteos,20,-5,15,3,3,15,-5,20];
+punteos=[...punteos,-20,-40,-5,-5,-5,-5,-40,-20];
+punteos=[...punteos,120,-20,20,5,5,20,-20,120];
 
 
 app.get('/', (req, res) => {
+    
     let { turno, estado } = req.query;
     if (turno && estado) {
         let matriz = estado.split("");
         let fila = 0;
         let columna = 0;
-        matriz = matriz.map((value) => {
-            const tmp = new Celda(value, fila, columna);
+        matriz = matriz.map((value,index) => {
+            const tmp = new Celda(value, fila, columna,punteos[index]);
             columna++;
             if (columna == 8) {
                 columna = 0;
@@ -29,12 +39,16 @@ app.listen(process.env.PORT || 3000);
 
 
 
+
+
 class Celda {
-    constructor(val, fila, columna) {
+    constructor(val, fila, columna, punteo) {
         this.tipo = Number.parseInt(val);
         this.fila = fila;
         this.columna = columna;
-        this.cantidad = 0;    //cantidad de fichas que se obtienen al caer en esta celda.  
+        this.cantidad = 0;    //cantidad de fichas que se obtienen al caer en esta celda. 
+        this.punteo=punteo;
+        this.acumulado=punteo; 
     }
 }
 
@@ -54,6 +68,9 @@ const tipoDireccion = {
     diag_225: 6,
     diag_315: 7
 };
+
+
+
 
 /**
 2	2	2	2	2	2	2	2
@@ -86,7 +103,8 @@ const minmax = (turno, matriz) => {
     const contrincante = turno == tipoCelda.blanca ? tipoCelda.negra : tipoCelda.blanca;
     let candidatos = [];
 
-    fichas_actuales.forEach(element => {
+    fichas_actuales.forEach((element) => {
+        
         // console.log("Para: ",element);
         //miramos los contrincantes que tenga en Vertical, horizontal y en diagonal. 
         //1. Verticalmente
@@ -110,7 +128,7 @@ const minmax = (turno, matriz) => {
             // console.log(vacio);
             if (vacio != undefined) {
                 candidatos = [...candidatos, vacio];
-            }
+            } 
         }
         if (abajo != undefined) {
             abajo.cantidad = 1;
@@ -173,7 +191,8 @@ const minmax = (turno, matriz) => {
 
     // console.log(candidatos);
 
-    candidatos.sort((a, b) => a.cantidad - b.cantidad);
+    // candidatos.sort((a, b) => a.cantidad - b.cantidad);
+    candidatos.sort((a, b) => a.acumulado - b.acumulado);
     // console.log(candidatos[candidatos.length-1]);
     return candidatos[candidatos.length - 1];
 }
@@ -210,12 +229,14 @@ const buscarVacio = (element, matriz, direccion) => {
         //encontramos más del mismo tipo!!
         let tmp = { ...tm };
         tmp.cantidad = element.cantidad + 1;
+        tmp.acumulado+=element.acumulado;
         return buscarVacio(tmp, matriz, direccion);
 
     } else if (tm.tipo == tipoCelda.vacio) {
         //eureka!!
         let tmp = { ...tm };
         tmp.cantidad = element.cantidad;//jalamos la cantidad que lleve el ultimo elemento contrincante
+        tmp.acumulado+=element.acumulado;
         return tmp; //retornamos ese espacio!!
     } else {
         return undefined;       //en cualquier otro caso, no se cumple la regla y retornamos undefined
